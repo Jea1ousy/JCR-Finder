@@ -221,12 +221,177 @@ function detectACMJournal() {
 
 // Springer期刊检测
 function detectSpringerJournal() {
-    const journalElements = document.querySelectorAll('.JournalTitle, .app-journal-masthead__title, h1');
-    for (const element of journalElements) {
-        if (element.textContent.trim()) {
-            return element.textContent.trim();
+    console.log('开始Springer期刊检测...');
+    
+    // 1. 优先检查meta标签 - 最准确的来源
+    const metaSelectors = [
+        'meta[name="citation_journal_title"]',
+        'meta[name="dc.source"]',
+        'meta[property="citation_journal_title"]',
+        'meta[name="prism.publicationName"]',
+        'meta[name="DC.Source"]',
+        'meta[property="og:site_name"]'
+    ];
+    
+    for (const selector of metaSelectors) {
+        const meta = document.querySelector(selector);
+        if (meta) {
+            const content = meta.getAttribute('content');
+            if (content && content.trim() && 
+                !content.toLowerCase().includes('springerlink') &&
+                !content.toLowerCase().includes('springer nature')) {
+                console.log('从Springer meta标签检测到期刊:', content);
+                return content.trim();
+            }
         }
     }
+    
+    // 2. 检查Springer特定的期刊页面元素
+    const springerSelectors = [
+        // Springer网站特定的期刊标题选择器
+        '.JournalTitle',
+        '.app-journal-masthead__title',
+        '.journal-title',
+        '.publication-title',
+        '.c-journal-header__title',
+        '.c-article-header__journal-title',
+        '.app-article-banner__journal-title',
+        '.c-article-magazine-title',
+        '.c-article-journal-title a',
+        '.u-interface-link[data-test="journal-link"]',
+        // 文章页面的期刊链接
+        '.c-article-identifiers__journal-title',
+        '.c-bibliographic-information__list-item--journal a',
+        '.c-article-header__journal-link',
+        // 期刊主页元素
+        'h1[data-test="journal-title"]',
+        '.app-journal-masthead h1',
+        '.c-journal-masthead__title',
+        // 通用标题选择器
+        'h1.journal-name',
+        'h1.publication-title'
+    ];
+    
+    for (const selector of springerSelectors) {
+        const elements = document.querySelectorAll(selector);
+        for (const element of elements) {
+            const text = element.textContent.trim();
+            if (text && text.length > 2 && text.length < 200 && 
+                !text.toLowerCase().includes('springerlink') &&
+                !text.toLowerCase().includes('springer nature') &&
+                !text.toLowerCase().includes('home') &&
+                !text.toLowerCase().includes('article') &&
+                !text.toLowerCase().includes('issue') &&
+                !text.toLowerCase().includes('volume')) {
+                console.log('从Springer页面元素检测到期刊:', text);
+                return text;
+            }
+        }
+    }
+    
+    // 3. 从URL路径检测期刊信息
+    const path = window.location.pathname;
+    const urlPatterns = [
+        // Springer期刊URL模式：/journal/12345
+        /\/journal\/(\d+)/i,
+        // 文章URL模式：可能包含期刊信息
+        /\/article\/[^\/]*\/([^\/]+)/i
+    ];
+    
+    for (const pattern of urlPatterns) {
+        const match = path.match(pattern);
+        if (match) {
+            // 如果匹配到期刊ID，尝试从页面中找到对应的期刊标题
+            const journalLinks = document.querySelectorAll('a[href*="/journal/"], .journal-title, h1');
+            for (const link of journalLinks) {
+                const text = link.textContent.trim();
+                if (text && text.length > 5 && text.length < 150 &&
+                    !text.toLowerCase().includes('springerlink') &&
+                    !text.toLowerCase().includes('browse') &&
+                    !text.toLowerCase().includes('search')) {
+                    console.log('从Springer URL匹配检测到期刊:', text);
+                    return text;
+                }
+            }
+        }
+    }
+    
+    // 4. 从页面标题中提取期刊名称
+    const title = document.title;
+    const titlePatterns = [
+        // "Journal Name | SpringerLink"
+        /^([^|]+)\s*\|\s*SpringerLink/i,
+        // "Article Title | Journal Name | SpringerLink"
+        /.*?\|\s*([^|]+)\s*\|\s*SpringerLink/i,
+        // "Journal Name - SpringerLink"
+        /^([^-]+)\s*-\s*SpringerLink/i,
+        // "Journal Name | Springer"
+        /^([^|]+)\s*\|\s*Springer/i
+    ];
+    
+    for (const pattern of titlePatterns) {
+        const match = title.match(pattern);
+        if (match) {
+            const journalName = match[1].trim();
+            // 验证是否是合理的期刊名称
+            if (journalName && journalName.length > 3 && journalName.length < 150 &&
+                !journalName.toLowerCase().includes('home') &&
+                !journalName.toLowerCase().includes('article') &&
+                !journalName.toLowerCase().includes('search') &&
+                !journalName.toLowerCase().includes('browse')) {
+                console.log('从Springer页面标题检测到期刊:', journalName);
+                return journalName;
+            }
+        }
+    }
+    
+    // 5. 检查面包屑导航
+    const breadcrumbs = document.querySelectorAll('.c-breadcrumb-list a, .breadcrumb a, .breadcrumb-item a, nav a');
+    for (const breadcrumb of breadcrumbs) {
+        const text = breadcrumb.textContent.trim();
+        const href = breadcrumb.getAttribute('href') || '';
+        
+        // 如果链接指向期刊主页且文本是期刊名称
+        if (href.includes('/journal/') && text && text.length > 3 && text.length < 100 &&
+            !text.toLowerCase().includes('home') &&
+            !text.toLowerCase().includes('springerlink')) {
+            console.log('从Springer面包屑检测到期刊:', text);
+            return text;
+        }
+    }
+    
+    // 6. 从期刊链接中提取
+    const journalLinks = document.querySelectorAll('a[href*="/journal/"]');
+    for (const link of journalLinks) {
+        const text = link.textContent.trim();
+        if (text && text.length > 5 && text.length < 150 &&
+            !text.toLowerCase().includes('browse') &&
+            !text.toLowerCase().includes('all journals') &&
+            !text.toLowerCase().includes('find a journal') &&
+            !text.toLowerCase().includes('springerlink')) {
+            console.log('从Springer期刊链接检测到期刊:', text);
+            return text;
+        }
+    }
+    
+    // 7. 最后检查任何可能包含期刊名称的h1-h3标题
+    const headings = document.querySelectorAll('h1, h2, h3');
+    for (const heading of headings) {
+        const text = heading.textContent.trim();
+        if (text && text.length > 5 && text.length < 150 &&
+            (text.includes('Journal') || text.includes('Review') || text.includes('International') || 
+             text.includes('European') || text.includes('American') || text.includes('Nature') ||
+             text.includes('Science') || text.includes('Research') || text.includes('Studies') ||
+             text.includes('Communications') || text.includes('Letters') || text.includes('Annals')) &&
+            !text.toLowerCase().includes('springerlink') &&
+            !text.toLowerCase().includes('article') &&
+            !text.toLowerCase().includes('issue')) {
+            console.log('从Springer标题检测到期刊:', text);
+            return text;
+        }
+    }
+    
+    console.log('Springer期刊检测失败');
     return null;
 }
 
