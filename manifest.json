@@ -1,0 +1,39 @@
+{
+    "name": "期刊分区查询助手",
+    "version": "1.0",
+    "manifest_version": 3,
+    "description": "快速查询当前网页期刊的分区信息",
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "storage",
+        "contextMenus",
+        "notifications"
+    ],
+    "host_permissions": [
+        "*://*/*",
+        "https://www.easyscholar.cc/*"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "期刊分区查询"
+    },
+    "content_scripts": [
+        {
+            "matches": ["*://*/*"],
+            "js": ["content.js"],
+            "run_at": "document_end"
+        }
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "icons": {
+        "16": "/icon/icon16.png",
+        "32": "/icon/icon32.png",
+        "48": "/icon/icon48.png",
+        "64": "/icon/icon64.png",
+        "128": "/icon/icon128.png",
+        "256": "/icon/icon256.png"
+    }
+}
