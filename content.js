@@ -33,14 +33,6 @@ function detectJournalFromPage() {
         journalName = detectSpringerJournal();
     } else if (hostname.includes('sciencedirect.com')) {
         journalName = detectScienceDirectJournal();
-    } else if (hostname.includes('wiley.com')) {
-        journalName = detectWileyJournal();
-    } else if (hostname.includes('tandfonline.com')) {
-        journalName = detectTaylorFrancisJournal();
-    } else if (hostname.includes('plos.org')) {
-        journalName = detectPLOSJournal();
-    } else if (hostname.includes('pubmed.ncbi.nlm.nih.gov')) {
-        journalName = detectPubMedJournal();
     } else if (hostname.includes('mdpi.com')) {
         journalName = detectMDPIJournal();
     } else {
@@ -249,50 +241,6 @@ function detectScienceDirectJournal() {
     return null;
 }
 
-// Wiley期刊检测
-function detectWileyJournal() {
-    const journalElements = document.querySelectorAll('.journal-banner__title, .publication-title, h1');
-    for (const element of journalElements) {
-        if (element.textContent.trim()) {
-            return element.textContent.trim();
-        }
-    }
-    return null;
-}
-
-// Taylor & Francis期刊检测
-function detectTaylorFrancisJournal() {
-    const journalElements = document.querySelectorAll('.journal-heading, .publication-title, h1');
-    for (const element of journalElements) {
-        if (element.textContent.trim()) {
-            return element.textContent.trim();
-        }
-    }
-    return null;
-}
-
-// PLOS期刊检测
-function detectPLOSJournal() {
-    const title = document.title.toLowerCase();
-    if (title.includes('plos one')) return 'PLOS ONE';
-    if (title.includes('plos')) {
-        const match = title.match(/plos\s+\w+/i);
-        if (match) return match[0];
-    }
-    return 'PLOS ONE';
-}
-
-// PubMed期刊检测
-function detectPubMedJournal() {
-    const journalElements = document.querySelectorAll('.journal-title, .cit, button[title*="journal"]');
-    for (const element of journalElements) {
-        const text = element.textContent.trim();
-        if (text && !text.includes('PubMed') && text.length > 3) {
-            return text;
-        }
-    }
-    return null;
-}
 
 // MDPI期刊检测
 function detectMDPIJournal() {
