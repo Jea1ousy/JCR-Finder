@@ -28,7 +28,7 @@
 - 🎨 **现代界面**: 美观的Material Design风格用户界面
 - 🌐 **广泛支持**: 支持Nature、Science、IEEE、ACM等主流学术网站
 - 🚀 **实时数据**: 基于EasyScholar API的最新期刊数据
-- ⚡ **快速响应**: 优化的查询算法，毫秒级响应速度
+- ⚡ **快速响应**: 优化的查询算法，秒级响应速度
 - 🔧 **可配置**: 支持自定义API配置和查询设置
 
 ## 🌐 支持的学术网站
@@ -142,6 +142,7 @@ JCR-Finder/
 | 数据类型 | 说明 |
 |---------|------|
 | 中科院分区 | 基础版和升级版分区信息 |
+| CCF分区 | CCF分区信息
 | JCR分区 | Journal Citation Reports分区 |
 | 影响因子 | 最新的期刊影响因子数据 |
 | 高校分级 | 各高校期刊分级标准 |
@@ -159,6 +160,6 @@ JCR-Finder/
 
 **[⬆ 回到顶部](#-期刊分区查询助手-jcr-finder)**
 
-Made with ❤️ by [Jea1ousy](https://github.com/your-username)
+Made with ❤️ by [Jea1ousy](https://github.com/Jea1ousy)
 
 </div> 
