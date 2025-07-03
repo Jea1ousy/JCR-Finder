@@ -1,10 +1,6 @@
-#  期刊分区查询助手 (JCR Finder)
+# 📚 期刊分区查询助手 (JCR Finder)
 
 > 一个快速查询期刊分区信息的Chrome浏览器插件，支持自动检测页面期刊、手动搜索和右键查询三种方式。
-
-<div align="center">
-  <img src="icon/icon16.png" alt="JCR Finder Icon" width="64" height="64">
-</div>
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-green?logo=google-chrome)](javascript:void(0))
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-blue)](https://developer.chrome.com/docs/extensions/mv3/)
