@@ -209,13 +209,126 @@ function detectIEEEJournal() {
 
 // ACM期刊检测
 function detectACMJournal() {
-    const journalElements = document.querySelectorAll('.issue-item__detail a, .publication-title, h1');
-    for (const element of journalElements) {
-        const text = element.textContent.trim();
-        if (text.includes('ACM')) {
+    console.log('开始ACM期刊检测...');
+    
+    // 1. 优先检查meta标签 - 最准确的来源
+    const metaSelectors = [
+        'meta[name="citation_journal_title"]',
+        'meta[name="dc.source"]',
+        'meta[property="citation_journal_title"]',
+        'meta[name="prism.publicationName"]',
+        'meta[name="DC.Source"]',
+        'meta[property="og:title"]'
+    ];
+    
+    for (const selector of metaSelectors) {
+        const meta = document.querySelector(selector);
+        if (meta) {
+            const content = meta.getAttribute('content');
+            if (content && content.trim() && 
+                (content.includes('ACM') || content.includes('Communications of the ACM') || 
+                 content.includes('Transactions') || content.includes('Journal') || 
+                 content.includes('SIGCHI') || content.includes('Computing'))) {
+                console.log('从ACM meta标签检测到期刊:', content);
+                return content.trim();
+            }
+        }
+    }
+    
+    // 2. 检查ACM特定的期刊页面元素
+    const acmSelectors = [
+        // ACM数字图书馆特定选择器
+        '.issue-item__detail a',
+        '.publication-title',
+        '.hlFld-Title',
+        '.article__tocHeading',
+        '.epub-section__title',
+        '.issue-item__title a',
+        '.citation .publicationTitle',
+        '.publicationTitle',
+        '.issue-item__detail .issue-item__title a',
+        '.toc__section .article__title',
+        // 期刊主页和文章页面
+        '.journalBanner__title',
+        '.journal-banner h1',
+        '.article-header__journal',
+        '.bibliographic__venue',
+        '.bibliographic .journal-title',
+        // 通用选择器
+        'h1',
+        'h2.section__title',
+        '.section-title'
+    ];
+    
+    for (const selector of acmSelectors) {
+        const elements = document.querySelectorAll(selector);
+        for (const element of elements) {
+            const text = element.textContent.trim();
+            if (text && text.length > 5 && text.length < 200 &&
+                (text.includes('ACM') || text.includes('Communications of the ACM') || 
+                 text.includes('Transactions on') || text.includes('Journal of') ||
+                 text.includes('SIGCHI') || text.includes('Computing') ||
+                 text.includes('Proceedings of') && text.includes('ACM'))) {
+                console.log('从ACM选择器检测到期刊:', text);
+                return text;
+            }
+        }
+    }
+    
+    // 3. 从URL路径推断期刊信息
+    const path = window.location.pathname;
+    const urlPatterns = [
+        { pattern: /\/journal\//, name: 'ACM Journal' },
+        { pattern: /\/magazine\//, name: 'ACM Magazine' },
+        { pattern: /\/transaction\//, name: 'ACM Transactions' },
+        { pattern: /\/conference\//, name: 'ACM Conference Proceedings' }
+    ];
+    
+    for (const { pattern, name } of urlPatterns) {
+        if (pattern.test(path)) {
+            // 尝试从URL参数中获取更具体的期刊名称
+            const urlParams = new URLSearchParams(window.location.search);
+            const journalId = urlParams.get('id') || urlParams.get('journal');
+            if (journalId) {
+                console.log('从ACM URL检测到期刊ID:', journalId);
+                return `${name} (${journalId})`;
+            }
+            console.log('从ACM URL检测到期刊类型:', name);
+            return name;
+        }
+    }
+    
+    // 4. 从页面标题检测ACM期刊
+    const title = document.title;
+    if (title && (title.includes('ACM') || title.includes('Computing') || 
+                  title.includes('Transactions') || title.includes('Communications'))) {
+        // 清理标题，移除网站信息
+        const cleanTitle = title
+            .replace(/\s*\|\s*ACM\s*Digital\s*Library.*$/i, '')
+            .replace(/\s*-\s*ACM\s*Digital\s*Library.*$/i, '')
+            .replace(/\s*\|\s*dl\.acm\.org.*$/i, '')
+            .replace(/\s*-\s*dl\.acm\.org.*$/i, '')
+            .trim();
+        
+        if (cleanTitle && cleanTitle.length > 10 && cleanTitle.length < 150) {
+            console.log('从ACM页面标题检测到期刊:', cleanTitle);
+            return cleanTitle;
+        }
+    }
+    
+    // 5. 检查导航中的期刊信息
+    const breadcrumbs = document.querySelectorAll('.breadcrumb a, .breadcrumbs a, nav a');
+    for (const breadcrumb of breadcrumbs) {
+        const text = breadcrumb.textContent.trim();
+        if (text && text.length > 10 && text.length < 100 &&
+            (text.includes('ACM') || text.includes('Transactions') || 
+             text.includes('Journal') || text.includes('Communications'))) {
+            console.log('从ACM检测到期刊:', text);
             return text;
         }
     }
+    
+    console.log('ACM期刊检测失败');
     return null;
 }
 
@@ -397,12 +510,158 @@ function detectSpringerJournal() {
 
 // ScienceDirect期刊检测
 function detectScienceDirectJournal() {
-    const journalElements = document.querySelectorAll('.publication-title-link, .journal-title, h1');
-    for (const element of journalElements) {
-        if (element.textContent.trim()) {
-            return element.textContent.trim();
+    console.log('开始ScienceDirect期刊检测...');
+    
+    // 1. 优先检查meta标签 - 最准确的来源
+    const metaSelectors = [
+        'meta[name="citation_journal_title"]',
+        'meta[name="dc.source"]',
+        'meta[property="citation_journal_title"]',
+        'meta[name="prism.publicationName"]',
+        'meta[name="DC.Source"]',
+        'meta[property="og:title"]'
+    ];
+    
+    for (const selector of metaSelectors) {
+        const meta = document.querySelector(selector);
+        if (meta) {
+            const content = meta.getAttribute('content');
+            if (content && content.trim() && 
+                !content.toLowerCase().includes('sciencedirect') &&
+                !content.toLowerCase().includes('elsevier')) {
+                console.log('从ScienceDirect meta标签检测到期刊:', content);
+                return content.trim();
+            }
         }
     }
+    
+    // 2. 检查ScienceDirect特定的期刊页面元素
+    const scienceDirectSelectors = [
+        // ScienceDirect特定选择器
+        '.publication-title-link',
+        '.journal-title',
+        '.title-text',
+        '.publication-title',
+        '.js-publication-title',
+        '.publication-header .title',
+        '.publication-header h1',
+        '.journal-header .title',
+        '.journal-masthead h1',
+        '.journal-banner .title',
+        // 文章页面的期刊信息
+        '.journal-info .title',
+        '.article-header .journal-title',
+        '.article-journal-title',
+        '.breadcrumb-journal',
+        // 期刊主页元素
+        '.journal-home-title',
+        '.journal-description .title',
+        // 通用选择器
+        'h1.journal-name',
+        'h1.publication-name',
+        '.journal-link'
+    ];
+    
+    for (const selector of scienceDirectSelectors) {
+        const elements = document.querySelectorAll(selector);
+        for (const element of elements) {
+            const text = element.textContent.trim();
+            if (text && text.length > 3 && text.length < 200 &&
+                !text.toLowerCase().includes('sciencedirect') &&
+                !text.toLowerCase().includes('elsevier') &&
+                !text.toLowerCase().includes('browse') &&
+                !text.toLowerCase().includes('search')) {
+                console.log('从ScienceDirect选择器检测到期刊:', text);
+                return text;
+            }
+        }
+    }
+    
+    // 3. 从面包屑导航检测
+    const breadcrumbs = document.querySelectorAll('.breadcrumb a, .breadcrumbs a, .navigation a, .nav-item a');
+    for (const breadcrumb of breadcrumbs) {
+        const text = breadcrumb.textContent.trim();
+        const href = breadcrumb.getAttribute('href') || '';
+        
+        // 检查是否是期刊链接
+        if ((href.includes('/journal/') || href.includes('/publication/')) && 
+            text && text.length > 3 && text.length < 100 &&
+            !text.toLowerCase().includes('home') &&
+            !text.toLowerCase().includes('browse') &&
+            !text.toLowerCase().includes('sciencedirect')) {
+            console.log('从ScienceDirect面包屑检测到期刊:', text);
+            return text;
+        }
+    }
+    
+    // 4. 从URL路径推断期刊信息
+    const path = window.location.pathname;
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // 检查期刊特定的URL参数
+    const journalId = urlParams.get('journal') || urlParams.get('pub') || urlParams.get('publication');
+    if (journalId) {
+        console.log('从ScienceDirect URL参数检测到期刊ID:', journalId);
+        // 可以根据期刊ID映射到期刊名称
+        return `Journal ID: ${journalId}`;
+    }
+    
+    // 5. 从页面标题检测
+    const title = document.title;
+    if (title && !title.toLowerCase().includes('sciencedirect') && 
+        !title.toLowerCase().includes('elsevier')) {
+        // 清理标题，移除网站信息
+        const cleanTitle = title
+            .replace(/\s*\|\s*ScienceDirect.*$/i, '')
+            .replace(/\s*-\s*ScienceDirect.*$/i, '')
+            .replace(/\s*\|\s*Elsevier.*$/i, '')
+            .replace(/\s*-\s*Elsevier.*$/i, '')
+            .trim();
+        
+        if (cleanTitle && cleanTitle.length > 5 && cleanTitle.length < 150 &&
+            (cleanTitle.includes('Journal') || cleanTitle.includes('Review') || 
+             cleanTitle.includes('International') || cleanTitle.includes('Research') ||
+             cleanTitle.includes('Letters') || cleanTitle.includes('Science') ||
+             cleanTitle.includes('Medicine') || cleanTitle.includes('Engineering'))) {
+            console.log('从ScienceDirect页面标题检测到期刊:', cleanTitle);
+            return cleanTitle;
+        }
+    }
+    
+    // 6. 检查期刊相关的链接
+    const journalLinks = document.querySelectorAll('a[href*="/journal/"], a[href*="/publication/"]');
+    for (const link of journalLinks) {
+        const text = link.textContent.trim();
+        if (text && text.length > 5 && text.length < 150 &&
+            !text.toLowerCase().includes('browse') &&
+            !text.toLowerCase().includes('all journals') &&
+            !text.toLowerCase().includes('find') &&
+            !text.toLowerCase().includes('search')) {
+            console.log('从ScienceDirect期刊链接检测到期刊:', text);
+            return text;
+        }
+    }
+    
+    // 7. 检查任何可能包含期刊名称的标题元素
+    const headings = document.querySelectorAll('h1, h2, h3');
+    for (const heading of headings) {
+        const text = heading.textContent.trim();
+        if (text && text.length > 5 && text.length < 150 &&
+            (text.includes('Journal') || text.includes('Review') || text.includes('International') || 
+             text.includes('European') || text.includes('American') || text.includes('Nature') ||
+             text.includes('Science') || text.includes('Research') || text.includes('Studies') ||
+             text.includes('Medicine') || text.includes('Engineering') || text.includes('Letters') ||
+             text.includes('Communications') || text.includes('Annals')) &&
+            !text.toLowerCase().includes('sciencedirect') &&
+            !text.toLowerCase().includes('elsevier') &&
+            !text.toLowerCase().includes('article') &&
+            !text.toLowerCase().includes('issue')) {
+            console.log('从ScienceDirect标题检测到期刊:', text);
+            return text;
+        }
+    }
+    
+    console.log('ScienceDirect期刊检测失败');
     return null;
 }
 
